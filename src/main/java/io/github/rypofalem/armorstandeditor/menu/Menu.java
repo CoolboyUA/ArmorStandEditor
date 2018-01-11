@@ -19,19 +19,18 @@
 
 package io.github.rypofalem.armorstandeditor.menu;
 
+import io.github.rypofalem.armorstandeditor.ArmorStandEditorPlugin;
 import io.github.rypofalem.armorstandeditor.PlayerEditor;
 import io.github.rypofalem.armorstandeditor.Util;
 
 import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.block.Skull;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -53,7 +52,7 @@ public class Menu {
 		ItemStack xAxis= null, yAxis= null, zAxis= null, coarseAdj= null, fineAdj= null, rotate = null, place = null, headPos= null,
 				rightArmPos= null, bodyPos= null, leftArmPos= null, reset = null, showArms= null, visibility= null, size= null,
 				rightLegPos= null, equipment = null, leftLegPos= null, disableSlots = null, gravity= null, plate= null, copy= null, paste= null,
-				slot1= null, slot2= null, slot3= null, slot4= null, help= null;
+				slot1= null, slot2= null, slot3= null, slot4= null, animation = null, help= null;
 
 		if(pe.getPlayer().hasPermission("asedit.head") ||
 				pe.getPlayer().hasPermission("asedit.body") ||
@@ -162,6 +161,11 @@ public class Menu {
 			equipment = createIcon(new ItemStack(Material.CHEST, 1),
 					"equipment", "mode equipment");
 		}
+                
+                if(ArmorStandEditorPlugin.instance().isAnimationsEnabled() && pe.getPlayer().hasPermission("asedit.animation")){
+			animation = createIcon( new ItemStack(Material.STRUCTURE_VOID),
+					"animation", "mode animation");
+		}
 
 		if(pe.getPlayer().hasPermission("asedit.copy")){
 			copy = createIcon(new ItemStack(Material.BOOK_AND_QUILL),
@@ -190,7 +194,7 @@ public class Menu {
 					xAxis, yAxis, zAxis, null, coarseAdj, fineAdj, null, rotate, place,
 					null, headPos, null, null, null, null, null, null, null,
 					rightArmPos, bodyPos, leftArmPos, reset, null, null, showArms, visibility, size,
-					rightLegPos, equipment, leftLegPos, null, null, null, null, gravity, plate,
+					rightLegPos, equipment, leftLegPos, null, null, null, animation, gravity, plate,
 					null, copy, paste, null, null, null, null, null, null,
 					slot1, slot2, slot3, slot4, null, null, null, null, help
 			};

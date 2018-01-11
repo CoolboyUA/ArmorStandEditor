@@ -1,0 +1,28 @@
+1: #id
+  creator: asdfasd-asdgasd-asdasd-asdas #save creator by uuid
+  type: LOOP //REVERT, LOOP, ONCE
+  frames:
+    1:
+      time: 20
+      body:
+        x: 2.12314
+        y: 2.135123
+        z: 0.4
+      head:
+        x: 2.432
+        y: 2.15
+        z: 0.4
+    2:
+      time: 10
+      body:
+        x: 3.12314
+        y: 2.135123
+        z: 1.4
+      head:
+        x: 2.432
+        y: 2.15
+        z: 1.4
+        
+###############
+asdasd-asdasd-asd-asdasd: #player uuid
+    sasd-asdasd-asdad: 1 #stand uuid and animation

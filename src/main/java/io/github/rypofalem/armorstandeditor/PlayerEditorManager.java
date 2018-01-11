@@ -16,9 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
 package io.github.rypofalem.armorstandeditor;
 
+import ua.coolboy.armorstandeditor.animation.AnimationEditor;
 import io.github.rypofalem.armorstandeditor.menu.ASEHolder;
 import io.github.rypofalem.armorstandeditor.menu.EquipmentMenu;
 import io.github.rypofalem.armorstandeditor.menu.Menu;
@@ -45,275 +45,415 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import ua.coolboy.armorstandeditor.animation.Animation;
+import ua.coolboy.armorstandeditor.menu.AnimationMenu;
+import ua.coolboy.armorstandeditor.menu.PlayerAnimationsMenu;
 
 //Manages PlayerEditors and Player Events related to editing armorstands
-public class PlayerEditorManager implements Listener{
-	ArmorStandEditorPlugin plugin;
-	HashMap<UUID, PlayerEditor> players;
-	private ASEHolder pluginHolder= new ASEHolder(); //Inventory holder that owns all menu inventories for the plugin
-	double coarseAdj;
-	double fineAdj;
-	double coarseMov;
-	double fineMov;
-	boolean ignoreNextInteract = false;
-	TickCounter counter;
+public class PlayerEditorManager implements Listener {
 
+    ArmorStandEditorPlugin plugin;
+    HashMap<UUID, PlayerEditor> players;
+    private ASEHolder pluginHolder = new ASEHolder(); //Inventory holder that owns all menu inventories for the plugin
+    double coarseAdj;
+    double fineAdj;
+    double coarseMov;
+    double fineMov;
+    boolean ignoreNextInteract = false;
+    TickCounter counter;
 
-	public PlayerEditorManager(ArmorStandEditorPlugin plugin){
-		this.plugin = plugin;
-		players = new HashMap<UUID, PlayerEditor>();
-		coarseAdj = Util.FULLCIRCLE / plugin.coarseRot;
-		fineAdj = Util.FULLCIRCLE / plugin.fineRot;
-		coarseMov = 1;
-		fineMov = .03125; // 1/32
-		counter = new TickCounter();
-		Bukkit.getServer().getScheduler().runTaskTimer(plugin, counter, 0, 1);
-	}
+    public PlayerEditorManager(ArmorStandEditorPlugin plugin) {
+        this.plugin = plugin;
+        players = new HashMap<UUID, PlayerEditor>();
+        coarseAdj = Util.FULLCIRCLE / plugin.coarseRot;
+        fineAdj = Util.FULLCIRCLE / plugin.fineRot;
+        coarseMov = 1;
+        fineMov = .03125; // 1/32
+        counter = new TickCounter();
+        Bukkit.getServer().getScheduler().runTaskTimer(plugin, counter, 0, 1);
+    }
 
-	@EventHandler (priority = EventPriority.LOWEST, ignoreCancelled=false)
-	void onArmorStandDamage(EntityDamageByEntityEvent event){
-		if(!(event.getDamager() instanceof Player))return;
-		Player player = (Player) event.getDamager();
-		if(!plugin.isEditTool(player.getInventory().getItemInMainHand())) return;
-		if(!(event.getEntity() instanceof ArmorStand)){
-			event.setCancelled(true);
-			getPlayerEditor(player.getUniqueId()).openMenu();
-			return;
-		}
-		ArmorStand as = (ArmorStand)event.getEntity();
-		getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
-		event.setCancelled(true);
-		if(canEdit(player, as)) applyLeftTool(player, as);
-	}
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    void onArmorStandDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getDamager();
+        if (!plugin.isEditTool(player.getInventory().getItemInMainHand())) {
+            return;
+        }
+        if (!(event.getEntity() instanceof ArmorStand)) {
+            event.setCancelled(true);
+            getPlayerEditor(player.getUniqueId()).openMenu();
+            return;
+        }
+        ArmorStand as = (ArmorStand) event.getEntity();
+        getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
+        event.setCancelled(true);
+        if (canEdit(player, as)) {
+            applyLeftTool(player, as);
+        }
+    }
 
-	@EventHandler (priority = EventPriority.LOWEST, ignoreCancelled=false)
-	void onArmorStandInteract(PlayerInteractAtEntityEvent event){
-		if(ignoreNextInteract) return;
-		if(event.getHand() != EquipmentSlot.HAND) return;
-		Player player =  event.getPlayer();
-		if(!(event.getRightClicked() instanceof ArmorStand)) return;
-		if(player.getInventory().getItemInMainHand() == null) return;
-		final ArmorStand as = (ArmorStand)event.getRightClicked();
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    void onArmorStandInteract(PlayerInteractAtEntityEvent event) {
+        if (ignoreNextInteract) {
+            return;
+        }
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (!(event.getRightClicked() instanceof ArmorStand)) {
+            return;
+        }
+        if (player.getInventory().getItemInMainHand() == null) {
+            return;
+        }
+        final ArmorStand as = (ArmorStand) event.getRightClicked();
 
-		if(!canEdit(player, as)) return;
-		if(plugin.isEditTool(player.getInventory().getItemInMainHand())){
-			getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
-			event.setCancelled(true);
-			applyRightTool(player, as);
-			return;
-		}
+        if (!canEdit(player, as)) {
+            return;
+        }
+        if (plugin.isEditTool(player.getInventory().getItemInMainHand())) {
+            if (plugin.animManager.getPreEdits().contains(player)) {
+                plugin.animManager.addEditor(new AnimationEditor(player, as));
+                player.sendMessage("You choosed stand");
+                event.setCancelled(true);
+                return;
+            }
+            getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
+            event.setCancelled(true);
+            applyRightTool(player, as);
+            return;
+        }
 
-		//Attempt rename
-		if(player.getInventory().getItemInMainHand().getType() == Material.NAME_TAG){
-			ItemStack nameTag = player.getInventory().getItemInMainHand();
-			final String name;
-			if(nameTag.getItemMeta().hasDisplayName()){
-				name = nameTag.getItemMeta().getDisplayName().replace('&', ChatColor.COLOR_CHAR);
-			} else {
-				name = null;
-			}
+        //Attempt rename
+        if (player.getInventory().getItemInMainHand().getType() == Material.NAME_TAG) {
+            ItemStack nameTag = player.getInventory().getItemInMainHand();
+            final String name;
+            if (nameTag.getItemMeta().hasDisplayName()) {
+                name = nameTag.getItemMeta().getDisplayName().replace('&', ChatColor.COLOR_CHAR);
+            } else {
+                name = null;
+            }
 
-			if(name == null){
-				as.setCustomName(null);
-				as.setCustomNameVisible(false);
-				event.setCancelled(true);
-			} else if((as.getCustomName() != null && !as.getCustomName().equals(name)) // armorstand has name and that name is not the same as the nametag
-					|| (as.getCustomName() == null && (!name.equals(""))) ){ // armorstand doesn't have name and nametag is not blank
-				event.setCancelled(true);
+            if (name == null) {
+                as.setCustomName(null);
+                as.setCustomNameVisible(false);
+                event.setCancelled(true);
+            } else if ((as.getCustomName() != null && !as.getCustomName().equals(name)) // armorstand has name and that name is not the same as the nametag
+                    || (as.getCustomName() == null && (!name.equals("")))) { // armorstand doesn't have name and nametag is not blank
+                event.setCancelled(true);
 
-				if((player.getGameMode() != GameMode.CREATIVE)){
-					if(nameTag.getAmount() > 1){
-						nameTag.setAmount(nameTag.getAmount() - 1);
-					}else{
-						nameTag = new ItemStack(Material.AIR);
-					}
-					player.getInventory().setItemInMainHand(nameTag);
-				}
+                if ((player.getGameMode() != GameMode.CREATIVE)) {
+                    if (nameTag.getAmount() > 1) {
+                        nameTag.setAmount(nameTag.getAmount() - 1);
+                    } else {
+                        nameTag = new ItemStack(Material.AIR);
+                    }
+                    player.getInventory().setItemInMainHand(nameTag);
+                }
 
-				plugin.print("Preparing to change " + as.getUniqueId().toString());
-				//minecraft will set the name after this event even if the event is cancelled.
-				//change it 1 tick later to apply formatting without it being overwritten
-				Bukkit.getScheduler().runTaskLater(plugin, new Runnable(){
-					public void run(){
-						as.setCustomName(name);
-						as.setCustomNameVisible(true);
-					}
-				}, 1);
-			}
-		}
-	}
+                plugin.print("Preparing to change " + as.getUniqueId().toString());
+                //minecraft will set the name after this event even if the event is cancelled.
+                //change it 1 tick later to apply formatting without it being overwritten
+                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        as.setCustomName(name);
+                        as.setCustomNameVisible(true);
+                    }
+                }, 1);
+            }
+        }
+    }
 
-	@EventHandler (priority = EventPriority.LOW, ignoreCancelled=true)
-	public void onSwitchHands(PlayerSwapHandItemsEvent event){
-		if(!plugin.isEditTool(event.getOffHandItem())) return; //event assumes they are already switched
-		event.setCancelled(true);
-		Player player = event.getPlayer();
-		getPlayerEditor(event.getPlayer().getUniqueId()).setTarget(getTargets(player));
-	}
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onSwitchHands(PlayerSwapHandItemsEvent event) {
+        if (!plugin.isEditTool(event.getOffHandItem())) {
+            return; //event assumes they are already switched
+        }
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        getPlayerEditor(event.getPlayer().getUniqueId()).setTarget(getTargets(player));
+    }
 
-	ArrayList<ArmorStand> getTargets(Player player){
-		Location eyeLaser = player.getEyeLocation();
-		Vector direction = player.getLocation().getDirection();
-		ArrayList<ArmorStand> armorStands = new ArrayList<>();
+    ArrayList<ArmorStand> getTargets(Player player) {
+        Location eyeLaser = player.getEyeLocation();
+        Vector direction = player.getLocation().getDirection();
+        ArrayList<ArmorStand> armorStands = new ArrayList<>();
 
-		final double STEPSIZE = .5;
-		final Vector STEP = direction.multiply(STEPSIZE);
-		final double RANGE = 10;
-		final double LASERRADIUS = .3;
-		List<Entity> nearbyEntities = player.getNearbyEntities(RANGE, RANGE, RANGE);
-		if(nearbyEntities == null || nearbyEntities.isEmpty()) return null;
+        final double STEPSIZE = .5;
+        final Vector STEP = direction.multiply(STEPSIZE);
+        final double RANGE = 10;
+        final double LASERRADIUS = .3;
+        List<Entity> nearbyEntities = player.getNearbyEntities(RANGE, RANGE, RANGE);
+        if (nearbyEntities == null || nearbyEntities.isEmpty()) {
+            return null;
+        }
 
-		for(double i = 0; i<RANGE; i+= STEPSIZE){
-			List<Entity> nearby = (List<Entity>) player.getWorld().getNearbyEntities(eyeLaser, LASERRADIUS, LASERRADIUS, LASERRADIUS);
-			if(!nearby.isEmpty()){
-				boolean endLaser = false;
-				for(Entity e : nearby){
-					if(e instanceof ArmorStand){
-						if(canEdit(player, (ArmorStand)e)){
-							armorStands.add((ArmorStand)e);
-							endLaser = true;
-						}
-					}
-				}
-				if(endLaser) break;
-			}
-			if(eyeLaser.getBlock().getType().isSolid()) break;
-			eyeLaser.add(STEP);
-		}
-		return armorStands;
-	}
+        for (double i = 0; i < RANGE; i += STEPSIZE) {
+            List<Entity> nearby = (List<Entity>) player.getWorld().getNearbyEntities(eyeLaser, LASERRADIUS, LASERRADIUS, LASERRADIUS);
+            if (!nearby.isEmpty()) {
+                boolean endLaser = false;
+                for (Entity e : nearby) {
+                    if (e instanceof ArmorStand) {
+                        if (canEdit(player, (ArmorStand) e)) {
+                            armorStands.add((ArmorStand) e);
+                            endLaser = true;
+                        }
+                    }
+                }
+                if (endLaser) {
+                    break;
+                }
+            }
+            if (eyeLaser.getBlock().getType().isSolid()) {
+                break;
+            }
+            eyeLaser.add(STEP);
+        }
+        return armorStands;
+    }
 
-	boolean canEdit(Player player, ArmorStand as){
-		ignoreNextInteract = true;
-		ArrayList<Event> events = new ArrayList<Event>();
-		events.add(new PlayerInteractEntityEvent(player, as, EquipmentSlot.HAND));
-		events.add(new PlayerInteractAtEntityEvent(player, as, as.getLocation().toVector(), EquipmentSlot.HAND));
-		//events.add(new PlayerArmorStandManipulateEvent(player, as, player.getEquipment().getItemInMainHand(), as.getItemInHand(), EquipmentSlot.HAND));
-		for(Event event : events){
-			if(!(event instanceof Cancellable)) continue;
-			try{
-				plugin.getServer().getPluginManager().callEvent(event);
-			} catch(IllegalStateException ise){
-				ise.printStackTrace();
-				ignoreNextInteract = false;
-				return false; //Something went wrong, don't allow edit just in case
-			}
-			if(((Cancellable)event).isCancelled()){
-				ignoreNextInteract = false;
-				return false;
-			}
-		}
-		ignoreNextInteract = false;
-		return true;
-	}
+    boolean canEdit(Player player, ArmorStand as) {
+        ignoreNextInteract = true;
+        ArrayList<Event> events = new ArrayList<Event>();
+        events.add(new PlayerInteractEntityEvent(player, as, EquipmentSlot.HAND));
+        events.add(new PlayerInteractAtEntityEvent(player, as, as.getLocation().toVector(), EquipmentSlot.HAND));
+        //events.add(new PlayerArmorStandManipulateEvent(player, as, player.getEquipment().getItemInMainHand(), as.getItemInHand(), EquipmentSlot.HAND));
+        for (Event event : events) {
+            if (!(event instanceof Cancellable)) {
+                continue;
+            }
+            try {
+                plugin.getServer().getPluginManager().callEvent(event);
+            } catch (IllegalStateException ise) {
+                ise.printStackTrace();
+                ignoreNextInteract = false;
+                return false; //Something went wrong, don't allow edit just in case
+            }
+            if (((Cancellable) event).isCancelled()) {
+                ignoreNextInteract = false;
+                return false;
+            }
+        }
+        ignoreNextInteract = false;
+        return true;
+    }
 
-	void applyLeftTool(Player player, ArmorStand as){
-		getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
-		getPlayerEditor(player.getUniqueId()).editArmorStand(as);
-	}
+    void applyLeftTool(Player player, ArmorStand as) {
+        getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
+        getPlayerEditor(player.getUniqueId()).editArmorStand(as);
+    }
 
-	void applyRightTool(Player player, ArmorStand as){
-		getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
-		getPlayerEditor(player.getUniqueId()).reverseEditArmorStand(as);
-	}
+    void applyRightTool(Player player, ArmorStand as) {
+        getPlayerEditor(player.getUniqueId()).cancelOpenMenu();
+        getPlayerEditor(player.getUniqueId()).reverseEditArmorStand(as);
+    }
 
-	@EventHandler (priority = EventPriority.LOWEST, ignoreCancelled=false)
-	void onRightClickTool(PlayerInteractEvent e){
-		if( !(e.getAction() == Action.LEFT_CLICK_AIR
-				|| e.getAction() == Action.RIGHT_CLICK_AIR
-				|| e.getAction() == Action.LEFT_CLICK_BLOCK
-				|| e.getAction() == Action.RIGHT_CLICK_BLOCK)) return;
-		Player player = e.getPlayer();
-		if(player.getInventory().getItemInMainHand() == null)  return;
-		if(!plugin.isEditTool(player.getInventory().getItemInMainHand())) return;
-		e.setCancelled(true);
-		getPlayerEditor(player.getUniqueId()).openMenu();
-	}
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    void onRightClickTool(PlayerInteractEvent e) {
+        if (!(e.getAction() == Action.LEFT_CLICK_AIR
+                || e.getAction() == Action.RIGHT_CLICK_AIR
+                || e.getAction() == Action.LEFT_CLICK_BLOCK
+                || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+            return;
+        }
+        Player player = e.getPlayer();
+        if (player.getInventory().getItemInMainHand() == null) {
+            return;
+        }
+        if (!plugin.isEditTool(player.getInventory().getItemInMainHand())) {
+            return;
+        }
+        e.setCancelled(true);
+        PlayerEditor editor = getPlayerEditor(player.getUniqueId());
+        editor.openMenu();
+    }
 
-	@EventHandler (priority = EventPriority.NORMAL, ignoreCancelled=true)
-	void onScrollNCrouch(PlayerItemHeldEvent e){
-		Player player = e.getPlayer();
-		if(!player.isSneaking()) return;
-		if(!plugin.isEditTool(player.getInventory().getItem(e.getPreviousSlot()))) return;
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    void onScrollNCrouch(PlayerItemHeldEvent e) {
+        Player player = e.getPlayer();
+        if (!player.isSneaking()) {
+            return;
+        }
+        if (!plugin.isEditTool(player.getInventory().getItem(e.getPreviousSlot()))) {
+            return;
+        }
 
-		e.setCancelled(true);
-		if(e.getNewSlot() == e.getPreviousSlot() +1 || (e.getNewSlot() == 0 && e.getPreviousSlot() == 8)){
-			getPlayerEditor(player.getUniqueId()).cycleAxis(1);
-		}else if(e.getNewSlot() == e.getPreviousSlot() - 1 || (e.getNewSlot() == 8 && e.getPreviousSlot() == 0)){
-			getPlayerEditor(player.getUniqueId()).cycleAxis(-1);
-		}
-	}
+        e.setCancelled(true);
+        if (e.getNewSlot() == e.getPreviousSlot() + 1 || (e.getNewSlot() == 0 && e.getPreviousSlot() == 8)) {
+            getPlayerEditor(player.getUniqueId()).cycleAxis(1);
+        } else if (e.getNewSlot() == e.getPreviousSlot() - 1 || (e.getNewSlot() == 8 && e.getPreviousSlot() == 0)) {
+            getPlayerEditor(player.getUniqueId()).cycleAxis(-1);
+        }
+    }
 
-	@EventHandler (priority = EventPriority.LOWEST, ignoreCancelled=false)
-	void onPlayerMenuSelect(InventoryClickEvent e){
-		if(e.getInventory() == null) return;
-		if(e.getInventory().getHolder() == null) return;
-		if(!(e.getInventory().getHolder() instanceof ASEHolder)) return;
-		if(e.getInventory().getName().equals(Menu.getName())){
-			e.setCancelled(true);
-			ItemStack item = e.getCurrentItem();
-			if(item!= null && item.hasItemMeta() && item.getItemMeta().hasLore()
-					&& !item.getItemMeta().getLore().isEmpty()
-					&& item.getItemMeta().getLore().get(0).startsWith(Util.encodeHiddenLore("ase"))){
-				Player player = (Player) e.getWhoClicked();
-				String command = Util.decodeHiddenLore(item.getItemMeta().getLore().get(0));
-				player.performCommand(command);
-				return;
-			}
-		}
-		if(e.getInventory().getName().equals(EquipmentMenu.getName())){
-			ItemStack item = e.getCurrentItem();
-			if(item == null) return;
-			if(item.getItemMeta() == null ) return;
-			if(item.getItemMeta().getLore() == null) return;
-			if(item.getItemMeta().getLore().contains(Util.encodeHiddenLore("ase icon"))){
-				e.setCancelled(true);
-			}
-		}
-	}
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    void onPlayerMenuSelect(InventoryClickEvent e) {
+        if (e.getInventory() == null) {
+            return;
+        }
+        if (e.getInventory().getHolder() == null) {
+            return;
+        }
+        if (!(e.getInventory().getHolder() instanceof ASEHolder)) {
+            return;
+        }
+        if (e.getInventory().getName().equals(Menu.getName())) {
+            e.setCancelled(true);
+            ItemStack item = e.getCurrentItem();
+            if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore()
+                    && !item.getItemMeta().getLore().isEmpty()
+                    && item.getItemMeta().getLore().get(0).startsWith(Util.encodeHiddenLore("ase"))) {
+                Player player = (Player) e.getWhoClicked();
+                String command = Util.decodeHiddenLore(item.getItemMeta().getLore().get(0));
+                player.performCommand(command);
+                return;
+            }
+        }
+        if (e.getInventory().getName().equals(EquipmentMenu.getName())) {
+            ItemStack item = e.getCurrentItem();
+            if (item == null) {
+                return;
+            }
+            if (item.getItemMeta() == null) {
+                return;
+            }
+            if (item.getItemMeta().getLore() == null) {
+                return;
+            }
+            if (item.getItemMeta().getLore().contains(Util.encodeHiddenLore("ase icon"))) {
+                e.setCancelled(true);
+            }
+        }
 
-	@EventHandler (priority = EventPriority.MONITOR, ignoreCancelled=true)
-	void onPlayerMenuClose(InventoryCloseEvent e){
-		if(e.getInventory() == null) return;
-		if(e.getInventory().getHolder() == null) return;
-		if(!(e.getInventory().getHolder() instanceof ASEHolder)) return;
-		if(e.getInventory().getName().equals(EquipmentMenu.getName())){
-			PlayerEditor pe = players.get(e.getPlayer().getUniqueId());
-			pe.equipMenu.equipArmorstand();
-		}
-	}
+        if (e.getInventory().getName().equals(AnimationMenu.getName())) {
+            Player player = (Player) e.getWhoClicked();
+            ItemStack item = e.getCurrentItem();
+            if (item == null) {
+                return;
+            }
+            if (item.getItemMeta() == null) {
+                return;
+            }
+            if (item.getItemMeta().getLore() == null) {
+                return;
+            }
 
-	@EventHandler (priority = EventPriority.MONITOR)
-	void onPlayerLogOut(PlayerQuitEvent e){
-		removePlayerEditor(e.getPlayer().getUniqueId());
-	}
+            ItemStack info = e.getInventory().getItem(e.getInventory().getSize() - 1);
+            String[] uuidStr = info.getItemMeta().getLore().get(0).split(" ");
+            String uuid = ChatColor.stripColor(uuidStr[uuidStr.length - 1]);
+            String[] idStr = item.getItemMeta().getDisplayName().split(" ");
+            String id = ChatColor.stripColor(idStr[idStr.length - 1]);
 
-	public PlayerEditor getPlayerEditor(UUID uuid){
-		return players.containsKey(uuid) ? players.get(uuid) : addPlayerEditor(uuid);
-	}
+            ArmorStand stand = (ArmorStand) Bukkit.getEntity(UUID.fromString(uuid));
+            Animation animation = plugin.animManager.getById(id);
 
-	PlayerEditor addPlayerEditor(UUID uuid){
-		PlayerEditor pe = new PlayerEditor(uuid, plugin);
-		players.put(uuid, pe);
-		return pe;
-	}
+            if (animation != null) {
+                if (animation.containsStand(stand)) {
+                    plugin.animManager.removeStand(player,animation, stand);
+                    e.getWhoClicked().closeInventory();
+                } else {
+                    plugin.animManager.addStand(player,animation, stand);
+                    e.getWhoClicked().closeInventory();
+                }
+            }
 
-	void removePlayerEditor(UUID uuid){
-		players.remove(uuid);
-	}
+            e.setCancelled(true);
+        }
 
-	public ASEHolder getPluginHolder() {
-		return pluginHolder;
-	}
+        if (e.getInventory().getName().equals(PlayerAnimationsMenu.getName())) {
+            ItemStack item = e.getCurrentItem();
+            if (item == null) {
+                return;
+            }
+            if (item.getItemMeta() == null) {
+                return;
+            }
+            if (item.getItemMeta().getLore() == null) {
+                return;
+            }
+            //TODO Animation edit
+            /*String name = item.getItemMeta().getDisplayName();
+            String[] idStr = name.split(" ");
+            String id = ChatColor.stripColor(idStr[idStr.length - 1]);
 
-	public long getTime(){
-		return counter.ticks;
-	}
+            Animation animation = plugin.animManager.getById(id);
 
-	class TickCounter implements Runnable{
-		long ticks = 0; //I am optimistic
-		@Override
-		public void run() {ticks++;}
-		public long getTime() {return ticks;}
-	}
+            if (animation != null) {
+                if (animation.isRunning()) {
+                    plugin.animManager.stopAnimation(animation);
+                    e.getWhoClicked().closeInventory();
+                } else {
+                    plugin.animManager.runAnimation(animation);
+                    e.getWhoClicked().closeInventory();
+                }
+            }*/
+
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    void onPlayerMenuClose(InventoryCloseEvent e) {
+        if (e.getInventory() == null) {
+            return;
+        }
+        if (e.getInventory().getHolder() == null) {
+            return;
+        }
+        if (!(e.getInventory().getHolder() instanceof ASEHolder)) {
+            return;
+        }
+        if (e.getInventory().getName().equals(EquipmentMenu.getName())) {
+            PlayerEditor pe = players.get(e.getPlayer().getUniqueId());
+            pe.equipMenu.equipArmorstand();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    void onPlayerLogOut(PlayerQuitEvent e) {
+        removePlayerEditor(e.getPlayer().getUniqueId());
+        plugin.animManager.removePlayerEditor(e.getPlayer());
+        plugin.animManager.removePlayerFromPreEdit(e.getPlayer());
+    }
+
+    public PlayerEditor getPlayerEditor(UUID uuid) {
+        return players.containsKey(uuid) ? players.get(uuid) : addPlayerEditor(uuid);
+    }
+
+    PlayerEditor addPlayerEditor(UUID uuid) {
+        PlayerEditor pe = new PlayerEditor(uuid, plugin);
+        players.put(uuid, pe);
+        return pe;
+    }
+
+    void removePlayerEditor(UUID uuid) {
+        players.remove(uuid);
+    }
+
+    public ASEHolder getPluginHolder() {
+        return pluginHolder;
+    }
+
+    public long getTime() {
+        return counter.ticks;
+    }
+
+    class TickCounter implements Runnable {
+
+        long ticks = 0; //I am optimistic
+
+        @Override
+        public void run() {
+            ticks++;
+        }
+
+        public long getTime() {
+            return ticks;
+        }
+    }
 }

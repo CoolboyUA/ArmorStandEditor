@@ -18,6 +18,16 @@ toolLore: Let's get dangerous
 #Name of the language file you wish to use
 lang: en_US.yml
 
+animations:
+  #Enable or disable animations
+  enabled: true
+  #How often update animation per second? 20 - max (20 ticks per second)
+  updateRate: 20
+  #Players can choose from all animations or only from own?
+  allAnimations: false
+  #Limit animated stands per player
+  limit-per-player: 3
+
 #If false plugin notifications will be sent to the chat box. If true messages will be sent to the action bar.
 sendMessagesToActionBar: true
 

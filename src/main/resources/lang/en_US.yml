@@ -28,6 +28,7 @@ setmode:
   gravity: Toggle Gravity
   baseplate: Toggle BasePlate
   placement: Placement
+  animation: Animation
   rotate: Rotate
   copy: Copy
   paste: Paste
@@ -97,6 +98,10 @@ mainmenutitle:
   msg: Armor Stand Editor Menu
 equiptitle:
   msg: ArmorStand Equipment
+playeranimationstitle:
+  msg: Animations #Animations created by player
+animationmenutitle:
+  msg: ArmorStand Animation #ArmorStand animation menu
 
 #icons
 xaxis:
@@ -195,6 +200,10 @@ reset:
   msg: Reset Pose
   description:
     msg: Reset bodypart position to default
+animation:
+  msg: Animation
+  description:
+      msg: Add animation to armorstand
 helpgui:
   msg: Help!
   description:
