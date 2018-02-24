@@ -68,6 +68,7 @@ public class CommandEx implements CommandExecutor {
             player.sendMessage(LISTAXIS);
             player.sendMessage(LISTSLOT);
             player.sendMessage(LISTADJUSTMENT);
+            player.sendMessage(ANIMATION1);
             return true;
         }
 
@@ -86,8 +87,9 @@ public class CommandEx implements CommandExecutor {
                     commandSlot(player, args);
                     break;
                 case "animation":
+                case "animations":
                     if(plugin.isAnimationsEnabled()) {
-                    commandAnim(player, args);
+                        commandAnim(player, args);
                     } else {
                         player.sendMessage("Animations disabled in config!");
                     }
@@ -196,7 +198,9 @@ public class CommandEx implements CommandExecutor {
         }
         if (args.length == 2) {
             if (args[1].equals("help")) {
-
+                player.sendMessage(ANIMATION2);
+                player.sendMessage(ANIMATION3);
+                player.sendMessage(ANIMATION4);
             }
             if (args[1].equals("new")) {
                 manager.addPlayerToPreEdit(player);

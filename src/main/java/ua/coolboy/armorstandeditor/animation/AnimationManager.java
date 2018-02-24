@@ -172,6 +172,7 @@ public class AnimationManager {
                 editor.save(id.toLowerCase());
                 ArmorStandEditorPlugin.instance().reloadAnimations();
                 editors.remove(editor);
+                player.sendMessage("Saved animation with id: "+id);
             } else {
                 player.sendMessage("There is already animation with that id!");
             }

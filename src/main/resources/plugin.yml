@@ -73,3 +73,6 @@ permissions:
     asedit.reset:
       description: Reset all body angles to zero
       default: true
+    asedit.animations.unlimit:
+      description: Ability to create unlimited amount of animations
+      default: op
