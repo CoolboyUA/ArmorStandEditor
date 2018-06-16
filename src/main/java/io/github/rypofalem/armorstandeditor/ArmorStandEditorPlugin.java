@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import ua.coolboy.armorstandeditor.animation.Animation;
+import ua.coolboy.armorstandeditor.glow.GlowRunnable;
 
 public class ArmorStandEditorPlugin extends JavaPlugin {
 
@@ -42,12 +43,14 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
     private File animationsFolder;
     private File playersFile;
     private YamlConfiguration players;
+    private GlowRunnable glow;
     public AnimationManager animManager;
     public boolean animations;
     public boolean allAnimations;
     public double animationUpdateRate;
     public int animationLimit;
     public int maxFrames = 20;
+    
 
     public PlayerEditorManager editorManager;
     public Material editTool = Material.FLINT;
@@ -113,6 +116,9 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
         execute = new CommandEx(this);
         getCommand("ase").setExecutor(execute);
         getServer().getPluginManager().registerEvents(editorManager, this);
+        
+        glow = new GlowRunnable(this);
+        glow.runTaskTimerAsynchronously(this, 0, 10);
     }
     
     public boolean isAnimationsEnabled() {
@@ -148,6 +154,7 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
             animation.resetPose();
         }
         stopAnimations();
+        glow.cancel();
     }
 
     private void stopAnimations() {
@@ -166,6 +173,10 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
 
     public YamlConfiguration getPlayers() {
         return players;
+    }
+    
+    public GlowRunnable getGlowRunnable() {
+        return glow;
     }
 
     public void savePlayers() {

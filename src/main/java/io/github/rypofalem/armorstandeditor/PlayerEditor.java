@@ -36,9 +36,9 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
+import ua.coolboy.armorstandeditor.glow.GlowPacket;
 import ua.coolboy.armorstandeditor.menu.AnimationMenu;
 
 public class PlayerEditor {
@@ -433,8 +433,13 @@ public class PlayerEditor {
     }
     
     private void highlight(ArmorStand armorStand) {
-        armorStand.removePotionEffect(PotionEffectType.GLOWING);
-        armorStand.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 15, 1, false, false));
+        new GlowPacket(armorStand, true).send(getPlayer());
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                new GlowPacket(armorStand, false).send(getPlayer());
+            }
+        }.runTaskLater(plugin, 15);
     }
     
     public final PlayerEditorManager getManager() {

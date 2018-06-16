@@ -76,3 +76,6 @@ permissions:
     asedit.animations.unlimit:
       description: Ability to create unlimited amount of animations
       default: op
+    asedit.glow:
+      description: See all nearby invisible stands using tool in hand
+      default: true
