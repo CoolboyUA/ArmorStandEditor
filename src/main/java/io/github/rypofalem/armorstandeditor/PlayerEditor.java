@@ -417,10 +417,10 @@ public class PlayerEditor {
     
     void sendMessage(String path, String format, String option) {
         if (plugin.sendToActionBar && plugin.isSpigot()) {
-            String rawText = plugin.getLang().getRawMessage(path, format, option);
+            String text = plugin.getLang().getMessage(path, format, option);
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(rawText));
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(text));
             }
         } else {
             String message = plugin.getLang().getMessage(path, format, option);

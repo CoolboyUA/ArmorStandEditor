@@ -354,10 +354,10 @@ public class PlayerEditorManager implements Listener {
 
             if (animation != null) {
                 if (animation.containsStand(stand)) {
-                    plugin.animManager.removeStand(player,animation, stand);
+                    plugin.animManager.removeStand(player, animation, stand);
                     e.getWhoClicked().closeInventory();
                 } else {
-                    plugin.animManager.addStand(player,animation, stand);
+                    plugin.animManager.addStand(player, animation, stand);
                     e.getWhoClicked().closeInventory();
                 }
             }

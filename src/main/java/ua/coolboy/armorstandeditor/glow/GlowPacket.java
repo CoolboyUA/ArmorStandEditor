@@ -14,11 +14,28 @@ public class GlowPacket {
 
     private Entity entity;
     private boolean glow;
+    private boolean supported;
     private Object packet;
 
     public GlowPacket(Entity entity, boolean glow) {
+        this(entity, glow, Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3]);
+    }
+
+    public GlowPacket(Entity entity, boolean glow, String version) {
         this.entity = entity;
         this.glow = glow;
+        switch (version) {
+            case "v1_12_R1":
+                init(58);
+                break;
+            case "v1_13_R1":
+                init(61);
+                break;
+            default:
+                supported = false;
+        }
+    }
+    private void init(int dataWatcherObjectPos) {
         try {
             Class<?> packetClass = getNMSClass("PacketPlayOutEntityMetadata");
 
@@ -31,7 +48,7 @@ public class GlowPacket {
 
             Method mb = item.getClass().getMethod("b");
 
-            Field field = getNMSClass("Entity").getDeclaredFields()[58]; //magic from GlowAPI, may change in every version
+            Field field = getNMSClass("Entity").getDeclaredFields()[dataWatcherObjectPos]; //magic from GlowAPI, may change in every version
             Object dataWatcherObject = getField(field, nmsEntity);
 
             byte prev = (byte) mb.invoke(item);
@@ -43,23 +60,23 @@ public class GlowPacket {
             packet = packetClass.newInstance();
             setField(packetClass.getDeclaredField("a"), packet, entity.getEntityId());
             setField(packetClass.getDeclaredField("b"), packet, list);
+
+            supported = true;
         } catch (Exception e) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to prepare glow packet!", e);
         }
     }
 
     public void send(Player player) {
-
-        if (!player.isOnline()) {
-            return;
-        }
+        if (!supported) return;
+        if (!player.isOnline()) return;
         sendPacket(player, packet);
     }
 
     public Entity getEntity() {
         return entity;
     }
-    
+
     public Object getPacket() {
         return packet;
     }

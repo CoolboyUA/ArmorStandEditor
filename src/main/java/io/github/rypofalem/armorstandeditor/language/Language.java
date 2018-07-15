@@ -16,7 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
 package io.github.rypofalem.armorstandeditor.language;
 
 import java.io.File;
@@ -33,6 +32,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import io.github.rypofalem.armorstandeditor.ArmorStandEditorPlugin;
 
 public class Language {
+
     final String DEFAULTLANG = "en_US.yml";
     private YamlConfiguration langConfig = null;
     private YamlConfiguration defConfig = null;
@@ -45,15 +45,15 @@ public class Language {
     }
 
     public void reloadLang(String langFileName) {
-        if (langFileName == null) langFileName = DEFAULTLANG;
+        if (langFileName == null) {
+            langFileName = DEFAULTLANG;
+        }
         File langFolder = new File(plugin.getDataFolder().getPath() + File.separator + "lang");
         langFile = new File(langFolder, langFileName);
 
         InputStream input = plugin.getResource("lang" + "/" + DEFAULTLANG); //getResource doesn't accept File.seperator on windows, need to hardcode unix seperator "/" instead
         Reader defaultLangStream = new InputStreamReader(input, Charset.forName("UTF-8"));
-        if (defaultLangStream != null) {
-            defConfig = YamlConfiguration.loadConfiguration(defaultLangStream);
-        }
+        defConfig = YamlConfiguration.loadConfiguration(defaultLangStream);
 
         input = null;
         try {
@@ -63,25 +63,35 @@ public class Language {
         }
 
         Reader langStream = new InputStreamReader(input, Charset.forName("UTF-8"));
-        if (langStream != null) {
-            langConfig = YamlConfiguration.loadConfiguration(langStream);
-        }
+        langConfig = YamlConfiguration.loadConfiguration(langStream);
     }
 
-    //path: yml path to message in language file
-    //format: yml path to format in language file
-    //option: path-specific variable that may be used
+    /**
+     * @param path yml path to message in language file
+     * @param format yml path to format in language file
+     * @param option path-specific variable that may be used
+     * @return Formatted message from path or empty string, if path equals null
+    *
+     */
     public String getMessage(String path, String format, String option) {
-        if (langConfig == null) reloadLang(langFile.getName());
-        if (path == null) return "";
-        if (option == null) option = "";
+        if (langConfig == null) {
+            reloadLang(langFile.getName());
+        }
+        if (path == null) {
+            return "";
+        }
+        if (option == null) {
+            option = "";
+        }
 
         format = getFormat(format);
         for (int i = 0; i < format.length(); i += 2) { //place formatting symbol before each character
             format = format.substring(0, i) + ChatColor.COLOR_CHAR + format.substring(i);
         }
 
-        if (getString(path + "." + option) != null) option = getString(path + "." + option);
+        if (getString(path + "." + option) != null) {
+            option = getString(path + "." + option);
+        }
         String message = format + getString(path + ".msg");
         message = message.replace("<x>", option);
         return message;
@@ -95,37 +105,7 @@ public class Language {
         return getMessage(path, "info");
     }
 
-    public String getRawMessage(String path, String format, String option){
-        String message = ChatColor.stripColor(getMessage(path, format, option));
-        format = getFormat(format);
-        ChatColor color = ChatColor.WHITE;
-        String bold = "" , italic = "" , underlined = "" , obfuscated = "" , strikethrough = "";
-        for(int i = 0; i < format.length(); i++){
-            ChatColor code = ChatColor.getByChar(format.charAt(i));
-            switch(code) {
-                case MAGIC:
-                    obfuscated = ", \"obfuscated\": true";
-                    break;
-                case BOLD:
-                    bold = ", \"bold\": true";
-                    break;
-                case STRIKETHROUGH:
-                    strikethrough = ", \"strikethrough\": true";
-                    break;
-                case UNDERLINE:
-                    underlined = ", \"underlined\": true";
-                    break;
-                case ITALIC:
-                    italic = ", \"italic\": true";
-                    break;
-                default: color = (code == null || !code.isColor()) ? color : code;
-            }
-        }
-        return String.format("{\"text\":\"%s\", \"color\":\"%s\"%s%s%s%s%s}", message, color.name().toLowerCase(),
-            obfuscated, bold, strikethrough, underlined, italic);
-    }
-
-    private String getFormat(String format){
+    private String getFormat(String format) {
         format = getString(format);
         return format == null ? "" : format;
     }
