@@ -25,12 +25,14 @@ import io.github.rypofalem.armorstandeditor.Util;
 
 import java.util.ArrayList;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.material.Wool;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -61,16 +63,16 @@ public class Menu {
 				pe.getPlayer().hasPermission("asedit.leftleg") ||
 				pe.getPlayer().hasPermission("asedit.rightleg") ||
 				pe.getPlayer().hasPermission("asedit.placement")){
-			xAxis = createIcon(new ItemStack(Material.WOOL, 1, (short) 14),
+			xAxis = createIcon(new Wool(DyeColor.RED).toItemStack(1),
 					"xaxis", "axis x");
 
-			yAxis = createIcon(new ItemStack(Material.WOOL, 1, (short) 13),
+			yAxis = createIcon(new Wool(DyeColor.GREEN).toItemStack(1),
 					"yaxis", "axis y");
 
-			zAxis = createIcon(new ItemStack(Material.WOOL, 1, (short) 11),
+			zAxis = createIcon(new Wool(DyeColor.BLUE).toItemStack(1),
 					"zaxis", "axis z");
 
-			coarseAdj = createIcon(new ItemStack(Material.DIRT, 1, (short)1),
+			coarseAdj = createIcon(new ItemStack(Material.COARSE_DIRT),
 					"coarseadj", "adj coarse");
 
 			fineAdj = createIcon( new ItemStack(Material.SANDSTONE),
@@ -128,7 +130,7 @@ public class Menu {
 		}
 
 		if(pe.getPlayer().hasPermission("asedit.size")){
-			size = createIcon( new ItemStack(Material.RAW_FISH, 1, (short)3),
+			size = createIcon( new ItemStack(Material.PUFFERFISH, 1, (short)3),
 					"size", "mode size");
 		}
 
@@ -143,7 +145,7 @@ public class Menu {
 		}
 
 		if(pe.getPlayer().hasPermission("asedit.baseplate")){
-			plate = createIcon( new ItemStack(Material.STEP, 1),
+			plate = createIcon( new ItemStack(Material.STONE_SLAB, 1),
 					"baseplate", "mode baseplate");
 		}
 
@@ -168,22 +170,22 @@ public class Menu {
 		}
 
 		if(pe.getPlayer().hasPermission("asedit.copy")){
-			copy = createIcon(new ItemStack(Material.BOOK_AND_QUILL),
+			copy = createIcon(new ItemStack(Material.WRITABLE_BOOK),
 					"copy","mode copy");
 
 			paste = createIcon(new ItemStack(Material.ENCHANTED_BOOK),
 					"paste","mode paste");
 
-			slot1 = createIcon(new ItemStack(Material.YELLOW_FLOWER),
+			slot1 = createIcon(new ItemStack(Material.DANDELION),
 					"copyslot","slot 1", "1");
 
-			slot2 = createIcon(new ItemStack(Material.RED_ROSE, 2, (short) 3),
+			slot2 = createIcon(new ItemStack(Material.AZURE_BLUET),
 					"copyslot", "slot 2", "2");
 
-			slot3 = createIcon(new ItemStack(Material.RED_ROSE, 3, (short) 1),
+			slot3 = createIcon(new ItemStack(Material.BLUE_ORCHID),
 					"copyslot","slot 3", "3");
 
-			slot4 = createIcon( new ItemStack(Material.DOUBLE_PLANT, 4, (short) 5),
+			slot4 = createIcon( new ItemStack(Material.PEONY),
 					"copyslot","slot 4", "4");
 		}
 

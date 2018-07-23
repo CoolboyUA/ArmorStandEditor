@@ -1,7 +1,9 @@
 package ua.coolboy.armorstandeditor.glow;
 
 import io.github.rypofalem.armorstandeditor.ArmorStandEditorPlugin;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -15,17 +17,23 @@ public class GlowRunnable extends BukkitRunnable {
 
     private ArmorStandEditorPlugin plugin;
     private Map<UUID, Map<Entity,BukkitTask>> glowing;
+    private List<String> supportedVersions = Arrays.asList("v1_12_R1", "v1_13_R1");
+    boolean working = true;
 
     public GlowRunnable(ArmorStandEditorPlugin plugin) {
         this.plugin = plugin;
         glowing = new HashMap<>();
         
         String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-        if(!version.equals("1_12_R1")) Bukkit.getLogger().warning("Glowing feature tested only on 1.12!");
+        if(!supportedVersions.contains(version)) {
+            Bukkit.getLogger().warning("Glowing feature is unsupported on this version!");
+            working = false;
+        }
     }
 
     @Override
     public void run() {
+        if(!working) return;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!player.hasPermission("asedit.glow")) {
                 continue;

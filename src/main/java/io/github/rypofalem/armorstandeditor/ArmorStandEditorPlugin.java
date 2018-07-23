@@ -50,7 +50,6 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
     public double animationUpdateRate;
     public int animationLimit;
     public int maxFrames = 20;
-    
 
     public PlayerEditorManager editorManager;
     public Material editTool = Material.FLINT;
@@ -96,39 +95,38 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
 
         animations = getConfig().getBoolean("animations.enabled", false);
         animationLimit = getConfig().getInt("animations.limit", 3);
-        animationUpdateRate = Math.min(getConfig().getDouble("animations.updateRate", 20),20); //limit to 20
+        animationUpdateRate = Math.min(getConfig().getDouble("animations.updateRate", 20), 20); //limit to 20
         allAnimations = getConfig().getBoolean("animations.allAnimations", false);
 
-        if (animations) {
-            playersFile = new File(this.getDataFolder(), "players.yml");
-            animationsFolder = new File(this.getDataFolder(), "animations");
-            if (!playersFile.exists() || !animationsFolder.exists()) {
-                try {
-                    playersFile.createNewFile();
-                    animationsFolder.mkdir();
-                } catch (IOException ex) {
-                    Bukkit.getLogger().warning("Can't create file!\n" + ex.getMessage());
-                }
+        playersFile = new File(this.getDataFolder(), "players.yml");
+        animationsFolder = new File(this.getDataFolder(), "animations");
+        if (!playersFile.exists() || !animationsFolder.exists()) {
+            try {
+                playersFile.createNewFile();
+                animationsFolder.mkdir();
+            } catch (IOException ex) {
+                Bukkit.getLogger().warning("Can't create file!\n" + ex.getMessage());
             }
-            loadAnimations();
         }
+        loadAnimations();
+
         editorManager = new PlayerEditorManager(this);
         execute = new CommandEx(this);
         getCommand("ase").setExecutor(execute);
         getServer().getPluginManager().registerEvents(editorManager, this);
-        
+
         glow = new GlowRunnable(this);
         glow.runTaskTimerAsynchronously(this, 0, 10);
     }
-    
+
     public boolean isAnimationsEnabled() {
         return animations;
     }
-    
+
     public double getAnimationRate() {
         return animationUpdateRate;
     }
-    
+
     private void loadAnimations() {
         players = YamlConfiguration.loadConfiguration(playersFile);
         animManager = new AnimationManager();
@@ -150,21 +148,21 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
                 player.closeInventory();
             }
         }
-        for (Animation animation : animManager.getAnimations()) {
-            animation.resetPose();
-        }
-        stopAnimations();
+            for (Animation animation : animManager.getAnimations()) {
+                animation.resetPose();
+            }
+            stopAnimations();
         glow.cancel();
     }
 
     private void stopAnimations() {
-        animManager.getAnimations().stream().forEach((animation) ->animation.stop());
+        animManager.getAnimations().stream().forEach((animation) -> animation.stop());
         animManager.getExecutor().shutdownNow();
     }
 
     public boolean isSpigot() {
         try {
-            Class.forName("org.bukkit.entity.Player.Spigot"); //Checking for Player.spigot()
+            Class.forName("org.bukkit.entity.Player$Spigot"); //Checking for Player.spigot()
             return true;
         } catch (ClassNotFoundException ex) {
             return false;
@@ -174,7 +172,7 @@ public class ArmorStandEditorPlugin extends JavaPlugin {
     public YamlConfiguration getPlayers() {
         return players;
     }
-    
+
     public GlowRunnable getGlowRunnable() {
         return glow;
     }
