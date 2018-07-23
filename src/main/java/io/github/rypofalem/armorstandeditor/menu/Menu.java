@@ -69,7 +69,7 @@ public class Menu {
 			yAxis = createIcon(new Wool(DyeColor.GREEN).toItemStack(1),
 					"yaxis", "axis y");
 
-			zAxis = createIcon(new Wool(DyeColor.ORANGE).toItemStack(1),
+			zAxis = createIcon(new Wool(DyeColor.BLUE).toItemStack(1),
 					"zaxis", "axis z");
 
 			coarseAdj = createIcon(new ItemStack(Material.COARSE_DIRT),
@@ -130,7 +130,7 @@ public class Menu {
 		}
 
 		if(pe.getPlayer().hasPermission("asedit.size")){
-			size = createIcon( new ItemStack(Material.TROPICAL_FISH, 1, (short)3),
+			size = createIcon( new ItemStack(Material.PUFFERFISH, 1, (short)3),
 					"size", "mode size");
 		}
 
