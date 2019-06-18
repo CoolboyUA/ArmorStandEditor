@@ -4,7 +4,7 @@
     <groupId>io.github.rypofalem.armorstandeditor</groupId>
     <artifactId>armorstandeditor</artifactId>
     <packaging>jar</packaging>
-    <version>1.13-20 BETA</version>
+    <version>1.14-22</version>
     <name>armorstandeditor</name>
     <url>http://maven.apache.org</url>
 
@@ -16,15 +16,13 @@
     </repositories>
 
     <dependencies>
-        <!--Spigot API -->
+        <!--Bukkit API-->
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.13-R0.1-SNAPSHOT</version>
+            <groupId>org.bukkit</groupId>
+            <artifactId>bukkit</artifactId>
+            <version>1.14-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-    </dependencies>
-
     <!--Java 8-->
     <build>
         <plugins>

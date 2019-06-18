@@ -467,17 +467,13 @@ public class PlayerEditor {
     boolean isMenuCancelled() {
         return getManager().getTime() - lastCancelled < 2;
     }
-    
-    class OpenMenuTask implements Runnable {
 
-        boolean hasRun = false;
-        
-        @Override
-        public void run() {
-            if (isMenuCancelled()) {
-                return;
-            }
-            chestMenu.openMenu();
-        }
-    }
+	private class OpenMenuTask implements Runnable{
+		
+		@Override
+		public void run() {
+			if(isMenuCancelled()) return;
+			chestMenu.openMenu();
+		}
+	}
 }

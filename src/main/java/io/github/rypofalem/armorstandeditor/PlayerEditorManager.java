@@ -44,6 +44,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 import ua.coolboy.armorstandeditor.animation.Animation;
 import ua.coolboy.armorstandeditor.menu.AnimationMenu;
@@ -52,19 +53,20 @@ import ua.coolboy.armorstandeditor.menu.PlayerAnimationsMenu;
 //Manages PlayerEditors and Player Events related to editing armorstands
 public class PlayerEditorManager implements Listener {
 
-    ArmorStandEditorPlugin plugin;
-    HashMap<UUID, PlayerEditor> players;
-    private ASEHolder pluginHolder = new ASEHolder(); //Inventory holder that owns all menu inventories for the plugin
+    private ArmorStandEditorPlugin plugin;
+	private HashMap<UUID, PlayerEditor> players;
+	private ASEHolder menuHolder = new ASEHolder(); //Inventory holder that owns the main ase menu inventories for the plugin
+	private ASEHolder equipmentHolder = new ASEHolder(); //Inventory holder that owns the equipment menu
     double coarseAdj;
     double fineAdj;
     double coarseMov;
     double fineMov;
-    boolean ignoreNextInteract = false;
-    TickCounter counter;
+    private boolean ignoreNextInteract = false;
+	private TickCounter counter;
 
-    public PlayerEditorManager(ArmorStandEditorPlugin plugin) {
+    PlayerEditorManager(ArmorStandEditorPlugin plugin) {
         this.plugin = plugin;
-        players = new HashMap<UUID, PlayerEditor>();
+        players = new HashMap<>();
         coarseAdj = Util.FULLCIRCLE / plugin.coarseRot;
         fineAdj = Util.FULLCIRCLE / plugin.fineRot;
         coarseMov = 1;
@@ -107,9 +109,6 @@ public class PlayerEditorManager implements Listener {
         if (!(event.getRightClicked() instanceof ArmorStand)) {
             return;
         }
-        if (player.getInventory().getItemInMainHand() == null) {
-            return;
-        }
         final ArmorStand as = (ArmorStand) event.getRightClicked();
 
         if (!canEdit(player, as)) {
@@ -132,7 +131,7 @@ public class PlayerEditorManager implements Listener {
         if (player.getInventory().getItemInMainHand().getType() == Material.NAME_TAG) {
             ItemStack nameTag = player.getInventory().getItemInMainHand();
             final String name;
-            if (nameTag.getItemMeta().hasDisplayName()) {
+            if(nameTag.getItemMeta() != null && nameTag.getItemMeta().hasDisplayName()){
                 name = nameTag.getItemMeta().getDisplayName().replace('&', ChatColor.COLOR_CHAR);
             } else {
                 name = null;
@@ -158,12 +157,9 @@ public class PlayerEditorManager implements Listener {
                 plugin.print("Preparing to change " + as.getUniqueId().toString());
                 //minecraft will set the name after this event even if the event is cancelled.
                 //change it 1 tick later to apply formatting without it being overwritten
-                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        as.setCustomName(name);
-                        as.setCustomNameVisible(true);
-                    }
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    as.setCustomName(name);
+                    as.setCustomNameVisible(true);
                 }, 1);
             }
         }
@@ -179,7 +175,7 @@ public class PlayerEditorManager implements Listener {
         getPlayerEditor(event.getPlayer().getUniqueId()).setTarget(getTargets(player));
     }
 
-    ArrayList<ArmorStand> getTargets(Player player) {
+    private ArrayList<ArmorStand> getTargets(Player player) {
         Location eyeLaser = player.getEyeLocation();
         Vector direction = player.getLocation().getDirection();
         ArrayList<ArmorStand> armorStands = new ArrayList<>();
@@ -189,7 +185,7 @@ public class PlayerEditorManager implements Listener {
         final double RANGE = 10;
         final double LASERRADIUS = .3;
         List<Entity> nearbyEntities = player.getNearbyEntities(RANGE, RANGE, RANGE);
-        if (nearbyEntities == null || nearbyEntities.isEmpty()) {
+        if (nearbyEntities.isEmpty()) {
             return null;
         }
 
@@ -219,7 +215,7 @@ public class PlayerEditorManager implements Listener {
 
     boolean canEdit(Player player, ArmorStand as) {
         ignoreNextInteract = true;
-        ArrayList<Event> events = new ArrayList<Event>();
+        ArrayList<Event> events = new ArrayList<>();
         events.add(new PlayerInteractEntityEvent(player, as, EquipmentSlot.HAND));
         events.add(new PlayerInteractAtEntityEvent(player, as, as.getLocation().toVector(), EquipmentSlot.HAND));
         //events.add(new PlayerArmorStandManipulateEvent(player, as, player.getEquipment().getItemInMainHand(), as.getItemInHand(), EquipmentSlot.HAND));
@@ -262,9 +258,6 @@ public class PlayerEditorManager implements Listener {
             return;
         }
         Player player = e.getPlayer();
-        if (player.getInventory().getItemInMainHand() == null) {
-            return;
-        }
         if (!plugin.isEditTool(player.getInventory().getItemInMainHand())) {
             return;
         }
@@ -302,7 +295,7 @@ public class PlayerEditorManager implements Listener {
         if (!(e.getInventory().getHolder() instanceof ASEHolder)) {
             return;
         }
-        if (e.getInventory().getName().equals(Menu.getName())) {
+        if(e.getInventory().getHolder() == menuHolder){
             e.setCancelled(true);
             ItemStack item = e.getCurrentItem();
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore()
@@ -314,7 +307,7 @@ public class PlayerEditorManager implements Listener {
                 return;
             }
         }
-        if (e.getInventory().getName().equals(EquipmentMenu.getName())) {
+        if(e.getInventory().getHolder() == equipmentHolder){
             ItemStack item = e.getCurrentItem();
             if (item == null) {
                 return;
@@ -431,15 +424,19 @@ public class PlayerEditorManager implements Listener {
         return pe;
     }
 
-    void removePlayerEditor(UUID uuid) {
+    private void removePlayerEditor(UUID uuid) {
         players.remove(uuid);
     }
 
-    public ASEHolder getPluginHolder() {
-        return pluginHolder;
-    }
+    public ASEHolder getMenuHolder() {
+		return menuHolder;
+	}
 
-    public long getTime() {
+	public ASEHolder getEquipmentHolder() {
+		return equipmentHolder;
+	}
+
+    long getTime() {
         return counter.ticks;
     }
 
