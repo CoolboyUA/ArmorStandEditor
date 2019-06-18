@@ -29,7 +29,11 @@ public class GlowPacket {
                 init(58);
                 break;
             case "v1_13_R1":
+            case "v1_13_R2":
                 init(61);
+                break;
+            case "v1_14_R1":
+                init(56);
                 break;
             default:
                 supported = false;
@@ -47,7 +51,7 @@ public class GlowPacket {
             Object item = ((Map<Integer, Object>) getField(d, dataWatcher)).get(0);
 
             Method mb = item.getClass().getMethod("b");
-
+            
             Field field = getNMSClass("Entity").getDeclaredFields()[dataWatcherObjectPos]; //magic from GlowAPI, may change in every version
             Object dataWatcherObject = getField(field, nmsEntity);
 

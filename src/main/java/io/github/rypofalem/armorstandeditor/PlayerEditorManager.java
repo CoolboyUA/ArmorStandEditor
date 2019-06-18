@@ -20,8 +20,6 @@ package io.github.rypofalem.armorstandeditor;
 
 import ua.coolboy.armorstandeditor.animation.AnimationEditor;
 import io.github.rypofalem.armorstandeditor.menu.ASEHolder;
-import io.github.rypofalem.armorstandeditor.menu.EquipmentMenu;
-import io.github.rypofalem.armorstandeditor.menu.Menu;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,25 +42,23 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 import ua.coolboy.armorstandeditor.animation.Animation;
-import ua.coolboy.armorstandeditor.menu.AnimationMenu;
-import ua.coolboy.armorstandeditor.menu.PlayerAnimationsMenu;
 
 //Manages PlayerEditors and Player Events related to editing armorstands
 public class PlayerEditorManager implements Listener {
 
     private ArmorStandEditorPlugin plugin;
-	private HashMap<UUID, PlayerEditor> players;
-	private ASEHolder menuHolder = new ASEHolder(); //Inventory holder that owns the main ase menu inventories for the plugin
-	private ASEHolder equipmentHolder = new ASEHolder(); //Inventory holder that owns the equipment menu
+    private HashMap<UUID, PlayerEditor> players;
+    private ASEHolder menuHolder = new ASEHolder(); //Inventory holder that owns the main ase menu inventories for the plugin
+    private ASEHolder equipmentHolder = new ASEHolder(); //Inventory holder that owns the equipment menu
+    private ASEHolder animationHolder = new ASEHolder();
     double coarseAdj;
     double fineAdj;
     double coarseMov;
     double fineMov;
     private boolean ignoreNextInteract = false;
-	private TickCounter counter;
+    private TickCounter counter;
 
     PlayerEditorManager(ArmorStandEditorPlugin plugin) {
         this.plugin = plugin;
@@ -131,7 +127,7 @@ public class PlayerEditorManager implements Listener {
         if (player.getInventory().getItemInMainHand().getType() == Material.NAME_TAG) {
             ItemStack nameTag = player.getInventory().getItemInMainHand();
             final String name;
-            if(nameTag.getItemMeta() != null && nameTag.getItemMeta().hasDisplayName()){
+            if (nameTag.getItemMeta() != null && nameTag.getItemMeta().hasDisplayName()) {
                 name = nameTag.getItemMeta().getDisplayName().replace('&', ChatColor.COLOR_CHAR);
             } else {
                 name = null;
@@ -295,7 +291,7 @@ public class PlayerEditorManager implements Listener {
         if (!(e.getInventory().getHolder() instanceof ASEHolder)) {
             return;
         }
-        if(e.getInventory().getHolder() == menuHolder){
+        if (e.getInventory().getHolder() == menuHolder) {
             e.setCancelled(true);
             ItemStack item = e.getCurrentItem();
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore()
@@ -307,7 +303,7 @@ public class PlayerEditorManager implements Listener {
                 return;
             }
         }
-        if(e.getInventory().getHolder() == equipmentHolder){
+        if (e.getInventory().getHolder() == equipmentHolder) {
             ItemStack item = e.getCurrentItem();
             if (item == null) {
                 return;
@@ -323,7 +319,7 @@ public class PlayerEditorManager implements Listener {
             }
         }
 
-        if (e.getInventory().getName().equals(AnimationMenu.getName())) {
+        if (e.getInventory().getHolder() == animationHolder) {
             Player player = (Player) e.getWhoClicked();
             ItemStack item = e.getCurrentItem();
             if (item == null) {
@@ -358,7 +354,7 @@ public class PlayerEditorManager implements Listener {
             e.setCancelled(true);
         }
 
-        if (e.getInventory().getName().equals(PlayerAnimationsMenu.getName())) {
+        if (e.getInventory().getHolder() == animationHolder) {
             ItemStack item = e.getCurrentItem();
             if (item == null) {
                 return;
@@ -401,7 +397,7 @@ public class PlayerEditorManager implements Listener {
         if (!(e.getInventory().getHolder() instanceof ASEHolder)) {
             return;
         }
-        if (e.getInventory().getName().equals(EquipmentMenu.getName())) {
+        if (e.getInventory().getHolder() == equipmentHolder) {
             PlayerEditor pe = players.get(e.getPlayer().getUniqueId());
             pe.equipMenu.equipArmorstand();
         }
@@ -429,12 +425,16 @@ public class PlayerEditorManager implements Listener {
     }
 
     public ASEHolder getMenuHolder() {
-		return menuHolder;
-	}
+        return menuHolder;
+    }
 
-	public ASEHolder getEquipmentHolder() {
-		return equipmentHolder;
-	}
+    public ASEHolder getEquipmentHolder() {
+        return equipmentHolder;
+    }
+    
+    public ASEHolder getAnimationHolder() {
+        return animationHolder;
+    }
 
     long getTime() {
         return counter.ticks;

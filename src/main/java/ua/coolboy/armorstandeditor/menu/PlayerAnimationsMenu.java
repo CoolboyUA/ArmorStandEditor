@@ -49,11 +49,11 @@ public class PlayerAnimationsMenu {
             }
         }
         if (playerAnimations.isEmpty()) {
-            inventory = Bukkit.createInventory(plugin.editorManager.getPluginHolder(), 9, inventoryName);
+            inventory = Bukkit.createInventory(plugin.editorManager.getAnimationHolder(), 9, inventoryName);
             inventory.setItem(4, empty);
         } else {
             int size = (int) (Math.floor(playerAnimations.size() / 9) * 9) + 9;
-            inventory = Bukkit.createInventory(plugin.editorManager.getPluginHolder(), size, inventoryName);
+            inventory = Bukkit.createInventory(plugin.editorManager.getAnimationHolder(), size, inventoryName);
             for (Animation animation : playerAnimations) {
                 inventory.addItem(createIcon(animation));
             }

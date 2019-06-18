@@ -46,11 +46,11 @@ public class AnimationMenu {
 
         Animation current = plugin.animManager.getByStandUUID(stand.getUniqueId());
         if (playerAnimations.isEmpty()) {
-            inventory = Bukkit.createInventory(plugin.editorManager.getPluginHolder(), 9, inventoryName);
+            inventory = Bukkit.createInventory(plugin.editorManager.getAnimationHolder(), 9, inventoryName);
             inventory.setItem(4, empty);
         } else {
             int size = (int) (Math.floor((playerAnimations.size() + 1) / 9) * 9) + 9;
-            inventory = Bukkit.createInventory(plugin.editorManager.getPluginHolder(), size, inventoryName);
+            inventory = Bukkit.createInventory(plugin.editorManager.getAnimationHolder(), size, inventoryName);
             for (Animation animation : playerAnimations) {
                 if (current != null && animation.equals(current)) {
                     inventory.addItem(createCurrentIcon(animation));
@@ -64,7 +64,7 @@ public class AnimationMenu {
     }
 
     private ItemStack createInfo() {
-        ItemStack stack = new ItemStack(Material.SIGN);
+        ItemStack stack = new ItemStack(Material.OAK_SIGN);
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Stand UUID: " + stand.getUniqueId().toString());
         lore.add(ChatColor.GRAY + "World: " + stand.getWorld().getName());
